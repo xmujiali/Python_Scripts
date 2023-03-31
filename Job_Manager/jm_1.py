@@ -39,14 +39,16 @@ if __name__ == '__main__':
                             if tmp:
                                 nproc = int(tmp.group(1))
                     
-                    if free_threads >= nproc:
-                        free_threads -= nproc
-                        print(os.getpid(), ':','free_threads = ', free_threads)
-                        pool.apply_async(func=run_gauss, args=(root, gjf_name, nproc), callback=done_gauss)
-                        time.sleep(1)
+                    succ = False
+                    while not succ:
+                        if free_threads >= nproc:
+                            free_threads -= nproc
+                            print(os.getpid(), ':','free_threads = ', free_threads)
+                            pool.apply_async(func=run_gauss, args=(root, gjf_name, nproc), callback=done_gauss)
+                            succ = True
+                            time.sleep(3)
+                        else:
+                            time.sleep(300)
                 os.chdir(working_dir)
-                
-
-        time.sleep(300)
             
             
