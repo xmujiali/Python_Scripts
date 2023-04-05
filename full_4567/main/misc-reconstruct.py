@@ -10,8 +10,8 @@ import re
 # 一些参数设定
 sample_gjf_file = '..\\samples\\semi_opt.gjf'
 failed_jobs = 'failed_jobs'
-Max_Tries = 6
-Max_Cycle = 20000
+Max_Tries = 12
+Max_Cycle = 10000
 R0 = 2.2
 R_max = 1.6
 R_min = 1.4
@@ -126,6 +126,7 @@ def write_gjf(iso, coords, gjf_filename):
         # 把坐标写入文件
         for c in range(1,N+1):
             f.write(f'C\t{coords[c][0]}\t{coords[c][1]}\t{coords[c][2]}\n')
+        f.write('\n')
 
 def reconstruct(iso, adj_tab):
     for i in range(1, Max_Tries+1):
