@@ -3,15 +3,19 @@
 
 import numpy as np
 import re
+import os
 
 
 '''
-本程序要在C30\semi_opt\目录下运行！
+假定当前目录下有failed_jobs文件,
+其中记录需要重新生成结构的异构体编号,
+且..\sameles\semi_opt.gjf,
+是Gaussian输入文件头的模板
 '''
 
-
+############################################################
 # 一些参数设定
-sample_gjf_file = '..\\samples\\semi_opt.gjf'
+sample_gjf_file = f'..{os.sep}samples{os.sep}semi_opt.gjf'
 failed_jobs = 'failed_jobs'
 Max_Tries = 12
 Max_Cycle = 10000
@@ -22,7 +26,7 @@ Factor_change = 0.02
 
 N = 30
 # 参数结束
-
+############################################################
 
 
 
@@ -155,7 +159,7 @@ with open(failed_jobs,'r') as f:
         # 得到异构体的编号
         isomer = int(line.strip())
         print(f'Handling Isomer: {isomer}')
-        with open(f'..\\coords\\C_{N}_{isomer}', 'r') as g:
+        with open(f'..{os.sep}coords{os.sep}C_{N}_{isomer}', 'r') as g:
             adjacent_tab = np.zeros((N+1,3), dtype=np.int32)
             
             for line in g.readlines()[N+2:2*N+2]:
