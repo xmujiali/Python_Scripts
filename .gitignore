@@ -160,5 +160,18 @@ cython_debug/
 #.idea/
 
 
+# my temp python scripts
+_*.py
+test.py
+test*.py
+
+_*/
+test/
+test*/
+
+
+
 # For CodeRunner
 tempCodeRunnerFile.py
+
+

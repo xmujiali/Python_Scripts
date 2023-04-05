@@ -1,29 +1,38 @@
-import os,time,re
-import multiprocessing as mp
-
-GAUSSIAN = 'g16'
-Max_threads = 24
-
-free_threads = Max_threads
-working_dir = os.getcwd()
-
-reg = r'%nproc*?=(\d*)\s*'
-
-def run_gauss(root, gjf_name, proc):
-    os.chdir(root)
-    print('\t', os.getpid(), ':',os.getcwd(), gjf_name)
-    os.system(f'{GAUSSIAN} {gjf_name}')
-    return proc
+import sys, os, time, re
+import subprocess as sp
 
 
-def done_gauss(n):
-    global free_threads
-    free_threads += n
+'''
+using this as following
+
+    cd working_directory
+    jm_1.py > out.txt 2> err.txt &
+
+'''
 
 if __name__ == '__main__':
-    pool = mp.Pool(processes=Max_threads)
-    os.chdir(working_dir)
-    while True:
+    # list for storing all running processes
+    procs = []
+    # if such file is deleted form working_dir, whole program will stopped
+    stop_code = 'delete_me_if_you_want_to_stop'
+    # waiting time, it will be adjusted at runtime
+    wait_sec = 10.0
+    wait_sec_min, wait_sec_max = 10.0, 600.0
+    alpha1,alpha2 = 7/8, 1/8
+
+    GAUSSIAN = 'g16'
+    Max_threads = 24
+    free_threads = Max_threads
+
+    working_dir = os.getcwd()
+    reg = r'%nproc*?=(\d*)\s*'
+
+
+    with open(stop_code, 'w') as f:
+        pass
+
+    
+    while os.path.exists(working_dir + os.sep + stop_code) :
         for root, dirs, files in os.walk(".",):
             for gjf_name in files:
                 base_name = gjf_name[:-4]
@@ -41,14 +50,37 @@ if __name__ == '__main__':
                     
                     succ = False
                     while not succ:
+                        # if there is enough free threads
+                        # submit the jobs
                         if free_threads >= nproc:
-                            free_threads -= nproc
-                            print(os.getpid(), ':','free_threads = ', free_threads)
-                            pool.apply_async(func=run_gauss, args=(root, gjf_name, nproc), callback=done_gauss)
                             succ = True
-                            time.sleep(3)
+                            free_threads -= nproc
+                            cmd = f'{GAUSSIAN} {gjf_name}'
+                            p = sp.Popen(cmd, shell=True)
+                            print(cmd)
+                            print('free_threads reduced to:', free_threads)
+                            procs.append((p,nproc))
+                            print('# procs = ', procs)
+                            wait_sec = wait_sec*alpha1 + wait_sec_min*alpha2
+                            print('wait_sec = ', wait_sec)
+                            sys.stdout.flush()
+                            time.sleep(1)
+                            
                         else:
-                            time.sleep(300)
+                            # if there is not enough free threads
+                            # see if some previous jobs are done.
+                            for item in procs:
+                                p,n = item
+                                if p.poll() is not None:
+                                    free_threads += n
+                                    procs.remove(item)
+                                    print('free_threads restored to:', free_threads)
+                                    print('# procs = ', procs)
+                            wait_sec = wait_sec*alpha1 + wait_sec_max*alpha2
+                            print('wait_sec = ', wait_sec)
+                            sys.stdout.flush()
+                            time.sleep(wait_sec)
+
                 os.chdir(working_dir)
             
             
