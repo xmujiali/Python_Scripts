@@ -1,39 +1,40 @@
 ##!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Sep  8 18:09:27 2019
-@author: Dr. Jai Li
-E-mail: xmujiali@163.com
-No description for this code!
-"""
-
-import parms
+import numpy as np
+import os
+import configparser
 
 
 def check_opt(name):
-    success = False
     with open(name + '.log') as log:
-        for line in log.readlines():
-            if line.strip() == '-- Stationary point found.':
-                success = True
-                break
-    if success:
-        return True
-    else:
-        return False
+        log_text = log.readlines()
+    for line in log_text:
+        if line.strip() == '-- Stationary point found.':
+            return True
+    return False
+
+
+parms = configparser.ConfigParser()
+parms.read('setting.ini')
+N = parms.getint('topo', 'total_carbons')
+# a more eval() to eliminate the extra quotation marks
+GAUSSIAN = eval(parms.get('gaussian', 'GAUSSIAN'))
 
 
 ALL_succ = True
-with open('isomers', 'r') as f_isomer, open('failed_jobs', 'w') as f_failed, open('redo_jobs.sh', 'w') as f_redo:
-    for line in f_isomer.readlines():
-        isomer = line[:-1]
-        name = 'C_%d_%s' % (parms.total_carbons, isomer)
-        if not check_opt(name):
-            f_failed.write(line)
-            name = 'C_%d_%s' % (parms.total_carbons, isomer)
-            f_redo.write(parms.GAUSSIAN + ' ' + name + '.gjf\n')
-            ALL_succ = False
+with open('isomers', 'r') as f_isomer, \
+    open('failed_jobs', 'w') as f_failed, \
+    open('redo_jobs.sh', 'w') as f_redo:
 
+    for line in f_isomer.readlines():
+        isomer = int(line.strip())
+        name = f'C_{N}_{isomer}'
+        if not check_opt(name):
+            f_failed.write(f'{isomer}\n' + '\n')
+            f_redo.write(f'{GAUSSIAN} {name}.gjf\n')
+            ALL_succ = False
+        
+        
 if ALL_succ:
     print('All optimization are normally terminated!')
 else:
