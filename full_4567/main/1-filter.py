@@ -18,8 +18,22 @@ total_carbons = parms.getint('topo', 'total_carbons')
 total_isomers = parms.getint('topo', 'total_isomers')
 ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
 ISOMER_TAIL_LINE = parms.getint('w3d', 'ISOMER_TAIL_LINE')
+
+working_directory = eval(parms.get('name', 'working_directory'))
+if os.path.exists(working_directory):
+    shutil.rmtree(working_directory)
+os.mkdir(working_directory)
+os.chdir(working_directory)
+sample_gjf_file = eval(parms.get('name', 'sample_gjf_file'))
+with open(sample_gjf_file, 'r') as f:
+            contents = f.read()
+coord_path = eval(parms.get('name', 'coord_path'))
+
+
+
 # a more eval() to eliminate the extra quotation marks
 GAUSSIAN = eval(parms.get('gaussian', 'GAUSSIAN'))
+
 
 print('Choose a filter from following:\n')
 print('-'*20)
@@ -36,29 +50,9 @@ while True:
     else:
         print('Wrong choice. Try again!')
 
-while True:
-    template = input('Give me a template file for gaussian inputs:')
-    if os.path.exists(template):
-        with open(template, 'r') as f:
-            contents = f.read()
-            break
-    else:
-        print('File not exits. Try again!')
-
-
-dir_name = input('Input the name of working directory:')
-if os.path.exists(dir_name):
-    shutil.rmtree(dir_name)
-os.mkdir(dir_name)
-os.chdir(dir_name)
-
 with open('isomers', 'w') as f_iso, open('run_jobs.sh', 'w') as f_run:
     # if there is NO %oldchk line, then we need write coordinates
     coord_flag = re.match('%oldchk', contents, re.S)
-    if coord_flag is None:
-        coord_path = input('Give me the location of coordinates files[enter for ../coords]:')
-        if coord_path == '':
-            coord_path = '..' + os.sep + 'coords'
 
     for i in isomers:
         f_iso.write(str(i) + '\n')
