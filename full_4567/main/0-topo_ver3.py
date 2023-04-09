@@ -1,11 +1,6 @@
 ##!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  4 19:04:00 2019
-@author: Dr. Jai Li
-E-mail: xmujiali@163.com
-No description for this code!
-"""
+
 
 import os
 import copy
@@ -13,9 +8,18 @@ import shutil
 import numpy as np
 import numpy as np
 import pandas as pd
-from sympy import default_sort_key
-import parms
+import configparser
 
+# initialize paramters
+parms = configparser.ConfigParser()
+parms.read('.\setting.ini', encoding='UTF-8')
+
+MIN_RING_SIZE = parms.getint('topo', 'MIN_RING_SIZE')
+MAX_RING_SIZE = parms.getint('topo', 'MAX_RING_SIZE')
+total_carbons = parms.getint('topo', 'total_carbons')
+total_isomers = parms.getint('topo', 'total_isomers')
+ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
+ISOMER_TAIL_LINE = parms.getint('w3d', 'ISOMER_TAIL_LINE')
 
 def get_ring(v0,v1,v2,v3):
     '''
@@ -33,7 +37,7 @@ def get_ring(v0,v1,v2,v3):
     # result stores cycles found by get_cycles
     # tmp_chains stores uncompleted chains, which is not cycles, but may be later.
     cycles = {}
-    for i in range(parms.MIN_RING_SIZE, parms.MAX_RING_SIZE+1):
+    for i in range(MIN_RING_SIZE,MAX_RING_SIZE+1):
         cycles[i] = []
     tmp_chains = [[v0,v1]]
     end = v2
@@ -43,7 +47,7 @@ def get_ring(v0,v1,v2,v3):
     def get_cycles(current_size):
         '''
         get cycles will generate all cycles like [v0,v1,...,vN,v0], 
-        with N < parms.MAX_RING_SIZE
+        with N < MAX_RING_SIZE
         '''
         nonlocal tmp_chains
         new_chains = []
@@ -63,7 +67,7 @@ def get_ring(v0,v1,v2,v3):
                         new_chains.append(_chain)
         
         current_size += 1
-        if current_size < parms.MAX_RING_SIZE:
+        if current_size < MAX_RING_SIZE:
             # update tmp_chains and call get_cycles() recursively
             tmp_chains = new_chains
             get_cycles(current_size)
@@ -87,7 +91,7 @@ def get_ring(v0,v1,v2,v3):
                 new_new_ones = new_new_ones | ( set(adj_tab[x]) - cycle - explored)
             explored = explored | new_ones
             new_ones = new_new_ones
-        if len(explored) + len(cycle) == parms.total_carbons:
+        if len(explored) + len(cycle) == total_carbons:
             return True
         else:
             return False
@@ -152,7 +156,7 @@ def skip_lines(f, n):
 df_topo = pd.DataFrame()
 df_Kekule = pd.DataFrame()
 df_Huckel = pd.DataFrame()
-w3d = 'C%d.w3d' % parms.total_carbons
+w3d = f'C{total_carbons}.w3d' 
 topo = 'topologies.csv'
 kekule = 'kekule.csv'
 huckel = 'huckel.csv'
@@ -161,23 +165,23 @@ if os.path.exists(coords_path):
     shutil.rmtree(coords_path)
 os.mkdir(coords_path)
 
-# allocate some arrays to store information for each isomer
-# for coding easily we use index runs from 1 to N
-coords = np.zeros((parms.total_carbons+1, 3))
-adj_tab = np.zeros((parms.total_carbons+1, 3), dtype='int32')
-adj_matrix = np.zeros((parms.total_carbons, parms.total_carbons), dtype='int32')
-all_carbons = list(range(1, parms.total_carbons+1))
+# allocate arrays to store information for each isomer
+# for coding easily, we use index runs from 1 to N
+coords = np.zeros((total_carbons+1, 3))
+adj_tab = np.zeros((total_carbons+1, 3), dtype='int32')
+adj_matrix = np.zeros((total_carbons, total_carbons), dtype='int32')
+all_carbons = list(range(1, total_carbons+1))
 
 
 # save default value of 3 dictionaries: type2car, type2bond and size2ring
 type2car_default = {}
 type2bond_default = {}
 type2ring_default = {}
-for i in range(parms.MIN_RING_SIZE, parms.MAX_RING_SIZE+1):
+for i in range(MIN_RING_SIZE, MAX_RING_SIZE+1):
     type2ring_default[i] = set()
-    for j in range(i, parms.MAX_RING_SIZE+1):
+    for j in range(i, MAX_RING_SIZE+1):
         type2bond_default[int(''.join((list(map(str, [i, j])))))] = []
-        for k in range(j, parms.MAX_RING_SIZE+1):
+        for k in range(j, MAX_RING_SIZE+1):
             type2car_default[int(''.join((list(map(str, [i, j, k])))))] = []
 
 
@@ -187,13 +191,13 @@ with open(w3d, 'r') as f_w3d:
     # in w3d file
     skip_lines(f_w3d, 1)
 
-    for isomer in range(1, parms.total_isomers+1):
+    for isomer in range(1, total_isomers+1):
         # skip the head line(s) of each isomer,
         # if no line need to skip, just set ISOMER_HEAD_LINE = 0 
-        skip_lines(f_w3d, parms.ISOMER_HEAD_LINE)
+        skip_lines(f_w3d, ISOMER_HEAD_LINE)
         adj_matrix[:, :] = 0 
 
-        for c0 in range(1, parms.total_carbons+1):
+        for c0 in range(1, total_carbons+1):
             line = f_w3d.readline()
             contents = line.split()
             coords[c0, 0] = float(contents[1])  # x coordinate
@@ -212,7 +216,7 @@ with open(w3d, 'r') as f_w3d:
         # skip the tail lines, which is
         # 0
         # for each isomer
-        skip_lines(f_w3d, parms.ISOMER_TAIL_LINE)
+        skip_lines(f_w3d, ISOMER_TAIL_LINE)
 
         # dicts to store carbon type, bond types and ring type
         # dict {car:car_type}
@@ -231,7 +235,7 @@ with open(w3d, 'r') as f_w3d:
         type2ring = copy.deepcopy(type2ring_default)
 
         # starting analysis
-        for c0 in range(1, parms.total_carbons+1):
+        for c0 in range(1, total_carbons+1):
             c1, c2, c3 = adj_tab[c0]
             ring12 = get_ring(c0, c1, c2, c3)
             ring12_type = len(ring12)
@@ -259,12 +263,12 @@ with open(w3d, 'r') as f_w3d:
 
 
         # save coordinates and other infomation
-        filename = 'C_%d_%d' % (parms.total_carbons, isomer)
+        filename = 'C_%d_%d' % (total_carbons, isomer)
         with open(os.path.join(coords_path, filename), 'w') as f_coord:
-            for c0 in range(1, parms.total_carbons+1):
+            for c0 in range(1, total_carbons+1):
                 f_coord.write('C\t%9.5f\t%9.5f\t%9.5f\n' % (coords[c0][0], coords[c0][1], coords[c0][2]))
             f_coord.write('\nadjencent table:\n')
-            for c0 in range(1, parms.total_carbons+1):
+            for c0 in range(1, total_carbons+1):
                 f_coord.write('%d:%d,%d,%d\n' % (c0, adj_tab[c0][0], adj_tab[c0][1], adj_tab[c0][2]))
             f_coord.write('\ncar2type:\n')
             f_coord.write(str(car2type) + '\n')

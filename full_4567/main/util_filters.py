@@ -1,28 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 11 21:37:22 2019
-@author: Dr. Jai Li
-E-mail: xmujiali@163.com
-No description for this code!
-"""
+
+
 import os
 import pandas as pd
-
-# configuration start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-total_carbons = 30
-total_isomers = 26639
-# total_carbons = 60
-# total_isomers = 1812
-charge = 0
-MIN_RING_SIZE, MAX_RING_SIZE = 4, 7
-ISOMER_HEAD_LINE = 0
-# ISOMER_HEAD_LINE = 1
-ISOMER_TAIL_LINE = 1
-max_Active_Sites = 6
-GAUSSIAN = 'g16'
-
 
 
 # following are filters

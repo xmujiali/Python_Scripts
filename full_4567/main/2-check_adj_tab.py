@@ -7,7 +7,7 @@ import configparser
 
 parms = configparser.ConfigParser()
 parms.read('setting.ini')
-N = parms.getint('topo', 'total_carbons')
+total_carbons = parms.getint('topo', 'total_carbons')
 # a more eval() to eliminate the extra quotation marks
 GAUSSIAN = eval(parms.get('gaussian', 'GAUSSIAN'))
 
@@ -19,16 +19,16 @@ reg_inp = re.compile(line_1 + line + r'.*?' + line + r'(.*?)' + line, re.S)
 # reg_std = re.compile(line_2 + line + r'.*?' + line + r'(.*?)' + line, re.S)
 reg_select_coords = re.compile(r'^\s*\d+\s*(\d+)\s*\d+\s*(\S+)\s*(\S+)\s*(\S+)$', re.M)
 
-adjacent_tab = np.zeros((N+1,3), dtype=np.int32)
-adjacent_tab_calc = np.zeros((N+1,3), dtype=np.int32)
-coords = np.zeros((N+1,3), dtype=float)
-dist_mat = np.zeros((N+1,N+1), dtype=float)
+adjacent_tab = np.zeros((total_carbons+1,3), dtype=np.int32)
+adjacent_tab_calc = np.zeros((total_carbons+1,3), dtype=np.int32)
+coords = np.zeros((total_carbons+1,3), dtype=float)
+dist_mat = np.zeros((total_carbons+1,total_carbons+1), dtype=float)
 
 def check_adj_tab(name):
     # get adj_tab
-    with open(f'..{os.sep}coords{os.sep}C_{N}_{isomer}', 'r') as g:
+    with open(f'..{os.sep}coords{os.sep}C_{total_carbons}_{isomer}', 'r') as g:
             
-        for line in g.readlines()[N+2:2*N+2]:
+        for line in g.readlines()[total_carbons+2:2*total_carbons+2]:
             center, neighbors = line.split(':')
             center = int(center)
             nbr1,nbr2,nbr3 = neighbors.split(',')
@@ -44,21 +44,21 @@ def check_adj_tab(name):
         text = f_log.read()
         tmp = re.findall(reg_inp, text)[-1]
         tmp = re.findall(reg_select_coords, tmp)
-        for i in range(N):
+        for i in range(total_carbons):
             _tmp = tmp[i]
             coords[i+1][0] = float(_tmp[1])
             coords[i+1][1] = float(_tmp[2])
             coords[i+1][2] = float(_tmp[3])
     
     
-    for i in range(1,N):
-        for j in range(i,N+1):
+    for i in range(1,total_carbons):
+        for j in range(i,total_carbons+1):
             # looping for i < j, 
             # calculate the distance between i and j
             r_ij = np.linalg.norm(coords[i] - coords[j])
             dist_mat[i][j] = dist_mat[j][i] = r_ij
     
-    for i in range(1,N+1):
+    for i in range(1,total_carbons+1):
         # There are two 'index' must be excluded,
         # namely, 0 and i (itself)
         nbr_list = dist_mat[i].argsort()[2:5]
@@ -79,13 +79,16 @@ def check_adj_tab(name):
 
 
 ALL_succ = True
-with open('isomers', 'r') as f_isomer, open('adj_error', 'w') as f_failed:
+with open('isomers', 'r') as f_isomer, \
+    open('adj_error', 'w') as f_failed, \
+      open('redo_opt.sh', 'w') as f_redo:
     for line in f_isomer.readlines():
         isomer = int(line.strip())
-        name = f'C_{N}_{isomer}'
+        name = f'C_{total_carbons}_{isomer}'
         if not check_adj_tab(name):
             ALL_succ = False
             f_failed.write(f'{isomer}\n')
+            f_redo.write(f'{GAUSSIAN} C_{total_carbons}_{isomer}.gjf')
         
 if ALL_succ:
     print('All optimization are normally terminated!')
