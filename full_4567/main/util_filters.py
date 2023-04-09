@@ -10,10 +10,7 @@ import pandas as pd
 # each filter take one DataFrame containing all topological information
 # and return a list of isomer numbers
 def choose_all():
-        file = input('Give me csv filename[Enter for ./topologies.csv]:')
-        if file == '':
-                file = '.' + os.sep + 'topologies.csv'
-        df = pd.read_csv(file, index_col=0)
+        df = pd.read_csv(f'..{os.sep}topologies.csv', index_col=0)
         return df.index.tolist()
 
 def larger_than():

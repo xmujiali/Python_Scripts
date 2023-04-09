@@ -99,9 +99,13 @@ Job done!
 ```
 2-check_opt.py
 ```
-如果全部成功会给出提示。如果有部分失败的任务也会记录到failed_jobs和redo_jobs.sh中，手工修改输入文件（提示：可能CAGE给出的结构本身是错误的！需要自行根据邻接表重新连接原子。），然后运行
+如果全部成功会给出提示。如果有部分失败的任务也会记录到opt_err和redo_opt.sh中。
+
+## 3 重建结构
+针对上一步出错的问题，可能CAGE给出的结构本身是错误的，需要根据邻接表重建结构
 ```
-bash redo_jobs.sh
+3-reconstruction.py 
+bash redo_opt.sh
 ```
 
 ## 3、统计能量(半经验/DFT)

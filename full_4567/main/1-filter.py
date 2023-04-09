@@ -30,7 +30,6 @@ with open(sample_gjf_file, 'r') as f:
 coord_path = eval(parms.get('name', 'coord_path'))
 
 
-
 # a more eval() to eliminate the extra quotation marks
 GAUSSIAN = eval(parms.get('gaussian', 'GAUSSIAN'))
 
