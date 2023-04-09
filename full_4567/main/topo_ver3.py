@@ -21,6 +21,17 @@ total_isomers = parms.getint('topo', 'total_isomers')
 ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
 ISOMER_TAIL_LINE = parms.getint('w3d', 'ISOMER_TAIL_LINE')
 
+w3d = eval(parms.get('name', 'w3d'))
+topo = eval(parms.get('name', 'topo'))
+kekule = eval(parms.get('name', 'kekule'))
+huckel = eval(parms.get('name', 'huckel'))
+coords_path = eval(parms.get('name', 'coords_path'))
+if os.path.exists(coords_path):
+    shutil.rmtree(coords_path)
+os.mkdir(coords_path)
+
+############################################################
+
 def get_ring(v0,v1,v2,v3):
     '''
     we need to distinguish ring and cycle:
@@ -156,14 +167,6 @@ def skip_lines(f, n):
 df_topo = pd.DataFrame()
 df_Kekule = pd.DataFrame()
 df_Huckel = pd.DataFrame()
-w3d = f'C{total_carbons}.w3d' 
-topo = 'topologies.csv'
-kekule = 'kekule.csv'
-huckel = 'huckel.csv'
-coords_path = 'coords'
-if os.path.exists(coords_path):
-    shutil.rmtree(coords_path)
-os.mkdir(coords_path)
 
 # allocate arrays to store information for each isomer
 # for coding easily, we use index runs from 1 to N

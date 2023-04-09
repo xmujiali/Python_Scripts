@@ -4,7 +4,7 @@
 import numpy as np
 import re
 import os
-
+import configparser
 
 '''
 假定当前目录下有failed_jobs文件,
@@ -15,16 +15,35 @@ import os
 
 ############################################################
 # 一些参数设定
-sample_gjf_file = f'..{os.sep}samples{os.sep}semi_opt.gjf'
-failed_jobs = 'failed_jobs'
-Max_Tries = 12
-Max_Cycle = 10000
-R0 = 2.2
-R_max = 1.6
-R_min = 1.4
-Factor_change = 0.02
 
-N = 30
+adj_err = 'adj_err'
+opt_err = 'opt_err'
+
+
+
+
+# initialize paramters
+parms = configparser.ConfigParser()
+parms.read('.\setting.ini', encoding='UTF-8')
+
+# MIN_RING_SIZE = parms.getint('topo', 'MIN_RING_SIZE')
+# MAX_RING_SIZE = parms.getint('topo', 'MAX_RING_SIZE')
+total_carbons = parms.getint('topo', 'total_carbons')
+total_isomers = parms.getint('topo', 'total_isomers')
+# ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
+# ISOMER_TAIL_LINE = parms.getint('w3d', 'ISOMER_TAIL_LINE')
+# a more eval() to eliminate the extra quotation marks
+GAUSSIAN = eval(parms.get('gaussian', 'GAUSSIAN'))
+sample_gjf_file = eval(parms.get('gaussian', 'sample_gjf_file'))
+
+print(sample_gjf_file)
+
+Max_Tries = parms.getint('reconstruct', 'Max_Tries')
+Max_Cycle = parms.getint('reconstruct', 'Max_Cycle')
+R0 = parms.getfloat('reconstruct', 'R0')
+R_max = parms.getfloat('reconstruct', 'R_max')
+R_min = parms.getfloat('reconstruct', 'R_min')
+Factor_change = parms.getfloat('reconstruct', 'Factor_change')
 # 参数结束
 ############################################################
 

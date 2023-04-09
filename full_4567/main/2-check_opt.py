@@ -30,7 +30,7 @@ with open('isomers', 'r') as f_isomer, \
         isomer = int(line.strip())
         name = f'C_{total_carbons}_{isomer}'
         if not check_opt(name):
-            f_failed.write(f'{isomer}\n' + '\n')
+            f_failed.write(f'{isomer}\n')
             f_redo.write(f'{GAUSSIAN} {name}.gjf\n')
             ALL_succ = False
         

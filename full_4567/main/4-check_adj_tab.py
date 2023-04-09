@@ -81,7 +81,7 @@ def check_adj_tab(name):
 ALL_succ = True
 with open('isomers', 'r') as f_isomer, \
     open('adj_error', 'w') as f_failed, \
-      open('redo_opt.sh', 'w') as f_redo:
+      open('redo_adj.sh', 'w') as f_redo:
     for line in f_isomer.readlines():
         isomer = int(line.strip())
         name = f'C_{total_carbons}_{isomer}'
