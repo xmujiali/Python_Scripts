@@ -1,16 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-
 import os
 import pandas as pd
-
+import parms
 
 # following are filters
 # each filter take one DataFrame containing all topological information
 # and return a list of isomer numbers
 def choose_all():
-        df = pd.read_csv(f'..{os.sep}topologies.csv', index_col=0)
+        topo = parms.main_path + os.sep + parms.topology
+        df = pd.read_csv(topo, index_col=0)
         return df.index.tolist()
 
 def larger_than():
@@ -46,6 +43,3 @@ filters = {
         'LT' : {'description' : 'returns isomers with value less than you give.',
                 'filter' : less_than},
 }
-
-
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< configuration end

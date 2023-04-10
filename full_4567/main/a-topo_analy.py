@@ -6,29 +6,10 @@ import os
 import copy
 import shutil
 import numpy as np
-import numpy as np
 import pandas as pd
-import configparser
+import utilities.utilities as util
+import parms
 
-# initialize paramters
-parms = configparser.ConfigParser()
-parms.read('.\setting.ini', encoding='UTF-8')
-
-MIN_RING_SIZE = parms.getint('topo', 'MIN_RING_SIZE')
-MAX_RING_SIZE = parms.getint('topo', 'MAX_RING_SIZE')
-total_carbons = parms.getint('topo', 'total_carbons')
-total_isomers = parms.getint('topo', 'total_isomers')
-ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
-ISOMER_TAIL_LINE = parms.getint('w3d', 'ISOMER_TAIL_LINE')
-
-w3d = eval(parms.get('name', 'w3d'))
-topo = eval(parms.get('name', 'topo'))
-kekule = eval(parms.get('name', 'kekule'))
-huckel = eval(parms.get('name', 'huckel'))
-coords_path = eval(parms.get('name', 'coords_path'))
-if os.path.exists(coords_path):
-    shutil.rmtree(coords_path)
-os.mkdir(coords_path)
 
 ############################################################
 
@@ -48,7 +29,7 @@ def get_ring(v0,v1,v2,v3):
     # result stores cycles found by get_cycles
     # tmp_chains stores uncompleted chains, which is not cycles, but may be later.
     cycles = {}
-    for i in range(MIN_RING_SIZE,MAX_RING_SIZE+1):
+    for i in range(parms.MIN_RING_SIZE,parms.MAX_RING_SIZE+1):
         cycles[i] = []
     tmp_chains = [[v0,v1]]
     end = v2
@@ -78,7 +59,7 @@ def get_ring(v0,v1,v2,v3):
                         new_chains.append(_chain)
         
         current_size += 1
-        if current_size < MAX_RING_SIZE:
+        if current_size < parms.MAX_RING_SIZE:
             # update tmp_chains and call get_cycles() recursively
             tmp_chains = new_chains
             get_cycles(current_size)
@@ -102,7 +83,7 @@ def get_ring(v0,v1,v2,v3):
                 new_new_ones = new_new_ones | ( set(adj_tab[x]) - cycle - explored)
             explored = explored | new_ones
             new_ones = new_new_ones
-        if len(explored) + len(cycle) == total_carbons:
+        if len(explored) + len(cycle) == parms.total_carbons:
             return True
         else:
             return False
@@ -158,56 +139,57 @@ def count_kekule(sites):
         num_kekule += count_kekule(lis_)
     return num_kekule
 
-def skip_lines(f, n):
-    for i in range(n):
-        f.readline()
+
 
 #################### above are utility functions ####################
 
-df_topo = pd.DataFrame()
+os.chdir(parms.main_path)
+util.mkdir_force(parms.CAGE_data_path)
+
+df_Topology = pd.DataFrame()
 df_Kekule = pd.DataFrame()
 df_Huckel = pd.DataFrame()
 
 # allocate arrays to store information for each isomer
 # for coding easily, we use index runs from 1 to N
-coords = np.zeros((total_carbons+1, 3))
-adj_tab = np.zeros((total_carbons+1, 3), dtype='int32')
-adj_matrix = np.zeros((total_carbons, total_carbons), dtype='int32')
-all_carbons = list(range(1, total_carbons+1))
+coords = np.zeros((parms.total_carbons+1, 3))
+adj_tab = np.zeros((parms.total_carbons+1, 3), dtype='int32')
+adj_matrix = np.zeros((parms.total_carbons, parms.total_carbons), dtype='int32')
+all_carbons = list(range(1, parms.total_carbons+1))
 
 
 # save default value of 3 dictionaries: type2car, type2bond and size2ring
 type2car_default = {}
 type2bond_default = {}
 type2ring_default = {}
-for i in range(MIN_RING_SIZE, MAX_RING_SIZE+1):
+for i in range(parms.MIN_RING_SIZE, parms.MAX_RING_SIZE+1):
     type2ring_default[i] = set()
-    for j in range(i, MAX_RING_SIZE+1):
+    for j in range(i, parms.MAX_RING_SIZE+1):
         type2bond_default[int(''.join((list(map(str, [i, j])))))] = []
-        for k in range(j, MAX_RING_SIZE+1):
+        for k in range(j, parms.MAX_RING_SIZE+1):
             type2car_default[int(''.join((list(map(str, [i, j, k])))))] = []
 
 
-with open(w3d, 'r') as f_w3d:
+with open(parms.w3d, 'r') as f_w3d:
     # skip the first line, which is
     # >>writegraph3d<<
     # in w3d file
-    skip_lines(f_w3d, 1)
+    util.skip_lines(f_w3d, 1)
 
-    for isomer in range(1, total_isomers+1):
+    for isomer in range(1, parms.total_isomers+1):
         # skip the head line(s) of each isomer,
         # if no line need to skip, just set ISOMER_HEAD_LINE = 0 
-        skip_lines(f_w3d, ISOMER_HEAD_LINE)
+        util.skip_lines(f_w3d, parms.ISOMER_HEAD_LINE)
         adj_matrix[:, :] = 0 
 
-        for c0 in range(1, total_carbons+1):
+        for c0 in range(1, parms.total_carbons+1):
             line = f_w3d.readline()
-            contents = line.split()
-            coords[c0, 0] = float(contents[1])  # x coordinate
-            coords[c0, 1] = float(contents[2])  # y coordinate
-            coords[c0, 2] = float(contents[3])  # z coordinate
+            template = line.split()
+            coords[c0, 0] = float(template[1])  # x coordinate
+            coords[c0, 1] = float(template[2])  # y coordinate
+            coords[c0, 2] = float(template[3])  # z coordinate
 
-            nb1, nb2, nb3 = int(contents[4]), int(contents[5]), int(contents[6])
+            nb1, nb2, nb3 = int(template[4]), int(template[5]), int(template[6])
             adj_tab[c0, 0] = nb1   # adjcent carbon 1
             adj_tab[c0, 1] = nb2   # adjcent carbon 2
             adj_tab[c0, 2] = nb3   # adjcent carbon 3
@@ -219,7 +201,7 @@ with open(w3d, 'r') as f_w3d:
         # skip the tail lines, which is
         # 0
         # for each isomer
-        skip_lines(f_w3d, ISOMER_TAIL_LINE)
+        util.skip_lines(f_w3d, parms.ISOMER_TAIL_LINE)
 
         # dicts to store carbon type, bond types and ring type
         # dict {car:car_type}
@@ -238,7 +220,7 @@ with open(w3d, 'r') as f_w3d:
         type2ring = copy.deepcopy(type2ring_default)
 
         # starting analysis
-        for c0 in range(1, total_carbons+1):
+        for c0 in range(1, parms.total_carbons+1):
             c1, c2, c3 = adj_tab[c0]
             ring12 = get_ring(c0, c1, c2, c3)
             ring12_type = len(ring12)
@@ -258,20 +240,20 @@ with open(w3d, 'r') as f_w3d:
         
         # save topological statistics
         for t, cars in type2car.items():
-            df_topo.loc[isomer, t] = len(cars)
+            df_Topology.loc[isomer, t] = len(cars)
         for t, bonds in type2bond.items():
-            df_topo.loc[isomer, t] = len(bonds)
+            df_Topology.loc[isomer, t] = len(bonds)
         for t, rings in type2ring.items():
-            df_topo.loc[isomer, t] = len(rings)
+            df_Topology.loc[isomer, t] = len(rings)
 
 
         # save coordinates and other infomation
-        filename = 'C_%d_%d' % (total_carbons, isomer)
-        with open(os.path.join(coords_path, filename), 'w') as f_coord:
-            for c0 in range(1, total_carbons+1):
+        filename = 'C_%d_%d' % (parms.total_carbons, isomer)
+        with open(os.path.join(parms.CAGE_data_path, filename), 'w') as f_coord:
+            for c0 in range(1, parms.total_carbons+1):
                 f_coord.write('C\t%9.5f\t%9.5f\t%9.5f\n' % (coords[c0][0], coords[c0][1], coords[c0][2]))
             f_coord.write('\nadjencent table:\n')
-            for c0 in range(1, total_carbons+1):
+            for c0 in range(1, parms.total_carbons+1):
                 f_coord.write('%d:%d,%d,%d\n' % (c0, adj_tab[c0][0], adj_tab[c0][1], adj_tab[c0][2]))
             f_coord.write('\ncar2type:\n')
             f_coord.write(str(car2type) + '\n')
@@ -298,6 +280,6 @@ with open(w3d, 'r') as f_w3d:
         df_Kekule.loc[isomer, 'K'] = k
         df_Kekule.loc[isomer, 'ln_K'] = np.log(k)
 
-df_topo.to_csv(topo)
-df_Huckel.to_csv(huckel)
-df_Kekule.to_csv(kekule)
+df_Topology.to_csv(parms.topology)
+df_Huckel.to_csv(parms.huckel)
+df_Kekule.to_csv(parms.kekule)
