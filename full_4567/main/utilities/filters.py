@@ -1,3 +1,6 @@
+##!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import pandas as pd
 import parms
@@ -43,3 +46,6 @@ filters = {
         'LT' : {'description' : 'returns isomers with value less than you give.',
                 'filter' : less_than},
 }
+
+if __name__ == '__main__':
+    pass

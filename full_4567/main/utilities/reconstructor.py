@@ -136,4 +136,5 @@ def reconstruct(isomer):
             # write_gjf(isomer, coords, f'C_{parms.total_carbons}_{isomer}_try{i}.gjf')
     return False
 
-
+if __name__ == '__main__':
+    pass

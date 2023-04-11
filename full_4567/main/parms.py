@@ -32,17 +32,16 @@ total_isomers = parms.getint('topo', 'total_isomers')
 
 # path_and_name
 main_path = eval(parms.get('path_and_name', 'main_path'))
+CAGE_data_path = eval(parms.get('path_and_name', 'CAGE_data_path'))
 w3d = eval(parms.get('path_and_name', 'w3d'))
 topology = eval(parms.get('path_and_name', 'topology'))
 kekule = eval(parms.get('path_and_name', 'kekule'))
 huckel = eval(parms.get('path_and_name', 'huckel'))
-CAGE_data_path = eval(parms.get('path_and_name', 'CAGE_data_path'))
 directories = eval(parms.get('path_and_name', 'directories'))
 gjf_template_path = eval(parms.get('path_and_name', 'gjf_template_path'))
 opt_error_log = eval(parms.get('path_and_name', 'opt_error_log'))
-# opt_fix_dir = eval(parms.get('path_and_name', 'opt_fix_dir'))
 adj_error_log = eval(parms.get('path_and_name', 'adj_error_log'))
-# adj_fix_dir = eval(parms.get('path_and_name', 'adj_fix_dir'))
+result = eval(parms.get('path_and_name', 'result'))
 
 # w3d
 ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
