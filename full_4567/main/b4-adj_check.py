@@ -3,6 +3,7 @@
 import numpy as np
 import re
 import os
+import logging
 import parms
 import utilities.utilities as util
 
@@ -59,12 +60,12 @@ if __name__ == '__main__':
         for line in fi.readlines():
             isomer = int(line.strip())
             if isomer % parms.report_frequency == 1:
-                print(f'Handling isomer {isomer}')
+                logging.info(f'Handling isomer {isomer}')
             if not adj_check(isomer):
                 ALL_succ = False
                 fael.write(f'{isomer}\n')            
     if ALL_succ:
         os.remove(parms.adj_error_log)
-        print('Optimized geometry and adjacent table are compatible for all isomers!')
+        logging.info('Optimized geometry and adjacent table are compatible for all isomers!')
     else:
-        print(f'Warning: isomers with incompatible optimized geometry and adjacent table are listed in file {parms.adj_error_log}.')
+        logging.info(f'Warning: isomers with incompatible optimized geometry and adjacent table are listed in file {parms.adj_error_log}.')

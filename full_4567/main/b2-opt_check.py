@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import logging
 import parms
 from utilities.reconstructor import reconstruct 
 
@@ -20,13 +21,13 @@ if __name__ == '__main__':
         for line in fi.readlines():
             isomer = int(line.strip())
             if isomer % parms.report_frequency == 1:
-                print(f'Handling isomer {isomer}')
+                logging.info(f'Handling isomer {isomer}')
             if not check_opt(isomer):
                 feol.write(f'{isomer}\n')
                 ALL_succ = False
     if ALL_succ:
         os.remove(parms.opt_error_log)
-        print('All optimization are normally terminated!')
+        logging.info('All optimization are normally terminated!')
     else:
-        print(f'FAILED optimization jobs are logged in {parms.opt_error_log}.')
+        logging.info(f'FAILED optimization jobs are logged in {parms.opt_error_log}.')
 

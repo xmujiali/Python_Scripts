@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-import re
 import os
-import shutil
+import logging
 import parms
 import utilities.utilities as util
 from utilities.filters import filters
@@ -39,7 +38,7 @@ with open('isomers', 'w') as f_isomer, open('run_opt.sh', 'w') as f_run:
         util.write_gjf(isomer, template)
         
 
-print(f'''Job done!
+logging.info(f'''Job done!
 Run following command lines
 
   cd {wd}

@@ -1,6 +1,7 @@
 ##!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import re
+import logging
 import parms
 import utilities.utilities as util
 from utilities.reconstructor import reconstruct 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
             for line in foel.readlines():
                 isomer = int(line.strip())
                 frof.write(f'{parms.GAUSSIAN} C_{parms.total_carbons}_{isomer}.gjf\n')
-                print(f'Handling Isomer: {isomer}')
+                logging.info(f'Handling Isomer: {isomer}')
                 gjf_name = f'C_{parms.total_carbons}_{isomer}.gjf'
                 with open(gjf_name, 'r') as gjf:
                     lines = gjf.readlines()
@@ -36,7 +37,7 @@ if __name__ == '__main__':
             for line in foel.readlines():
                 isomer = int(line.strip())
                 frof.write(f'{parms.GAUSSIAN} C_{parms.total_carbons}_{isomer}.gjf\n')
-                print(f'Handling Isomer: {isomer}')
+                logging.info(f'Handling Isomer: {isomer}')
                 reconstruct(isomer)
-    print('bash "run_opt_fix.sh" to do fix optimization.')
+    logging.info('bash "run_opt_fix.sh" to do fix optimization.')
 

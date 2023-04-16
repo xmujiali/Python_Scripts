@@ -1,7 +1,7 @@
 ##!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
-import shutil
+import logging
 import configparser
 
 '''
@@ -15,10 +15,10 @@ TODO: value check for options
 # initialize paramters
 parms = configparser.ConfigParser()
 
-if os.path.exists('.\setting.ini'):
-       parms.read('.\setting.ini', encoding='UTF-8')
-elif os.path.exists('..\setting.ini'):
-       parms.read('..\setting.ini', encoding='UTF-8')
+if os.path.exists(f'.{os.sep}setting.ini'):
+       parms.read(f'.{os.sep}setting.ini', encoding='UTF-8')
+elif os.path.exists(f'..{os.sep}setting.ini'):
+       parms.read(f'..{os.sep}setting.ini', encoding='UTF-8')
 else:
         print('Missing configure file setting.ini!')
         exit(-1) 
@@ -42,6 +42,9 @@ gjf_template_path = eval(parms.get('path_and_name', 'gjf_template_path'))
 opt_error_log = eval(parms.get('path_and_name', 'opt_error_log'))
 adj_error_log = eval(parms.get('path_and_name', 'adj_error_log'))
 result = eval(parms.get('path_and_name', 'result'))
+logging_file = eval(parms.get('path_and_name', 'logging_file'))
+
+
 
 # w3d
 ISOMER_HEAD_LINE = parms.getint('w3d', 'ISOMER_HEAD_LINE')
@@ -63,3 +66,20 @@ Factor_change = parms.getfloat('reconstructor', 'Factor_change')
 
 # other
 report_frequency = parms.getint('other', 'report_frequency')
+
+
+# level =
+# logging.DEBUG
+# logging.INFO
+# logging.WARNING
+# logging.ERROR
+# logging.CRITICAL
+logging.basicConfig(filename=main_path+os.sep+logging_file,
+                    filemode='a',
+                    format='%(asctime)s - %(filename)s - %(message)s',
+                    level=logging.INFO)
+# debug = logging.debug
+# info = logging.info
+# warning = logging.warning
+# error = logging.error
+# critical = logging.critical
