@@ -9,7 +9,6 @@ No description for this code!
 """
 
 import numpy as np
-import pandas as pd
 import shutil
 import os
 import re

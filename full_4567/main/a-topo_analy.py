@@ -143,143 +143,144 @@ def count_kekule(sites):
 
 #################### above are utility functions ####################
 
-os.chdir(parms.main_path)
-util.mkdir_force(parms.CAGE_data_path)
+if __name__ == '__main__':
+    os.chdir(parms.main_path)
+    util.mkdir_force(parms.CAGE_data_path)
 
-df_Topology = pd.DataFrame()
-df_Kekule = pd.DataFrame()
-df_Huckel = pd.DataFrame()
+    df_Topology = pd.DataFrame()
+    df_Kekule = pd.DataFrame()
+    df_Huckel = pd.DataFrame()
 
-# allocate arrays to store information for each isomer
-# for coding easily, we use index runs from 1 to N
-coords = np.zeros((parms.total_carbons+1, 3))
-adj_tab = np.zeros((parms.total_carbons+1, 3), dtype='int32')
-adj_matrix = np.zeros((parms.total_carbons, parms.total_carbons), dtype='int32')
-all_carbons = list(range(1, parms.total_carbons+1))
-
-
-# save default value of 3 dictionaries: type2car, type2bond and size2ring
-type2car_default = {}
-type2bond_default = {}
-type2ring_default = {}
-for i in range(parms.MIN_RING_SIZE, parms.MAX_RING_SIZE+1):
-    type2ring_default[i] = set()
-    for j in range(i, parms.MAX_RING_SIZE+1):
-        type2bond_default[int(''.join((list(map(str, [i, j])))))] = []
-        for k in range(j, parms.MAX_RING_SIZE+1):
-            type2car_default[int(''.join((list(map(str, [i, j, k])))))] = []
+    # allocate arrays to store information for each isomer
+    # for coding easily, we use index runs from 1 to N
+    coords = np.zeros((parms.total_carbons+1, 3))
+    adj_tab = np.zeros((parms.total_carbons+1, 3), dtype='int32')
+    adj_matrix = np.zeros((parms.total_carbons, parms.total_carbons), dtype='int32')
+    all_carbons = list(range(1, parms.total_carbons+1))
 
 
-with open(parms.w3d, 'r') as f_w3d:
-    # skip the first line, which is
-    # >>writegraph3d<<
-    # in w3d file
-    util.skip_lines(f_w3d, 1)
-
-    for isomer in range(1, parms.total_isomers+1):
-        # skip the head line(s) of each isomer,
-        # if no line need to skip, just set ISOMER_HEAD_LINE = 0 
-        util.skip_lines(f_w3d, parms.ISOMER_HEAD_LINE)
-        adj_matrix[:, :] = 0 
-
-        for c0 in range(1, parms.total_carbons+1):
-            line = f_w3d.readline()
-            template = line.split()
-            coords[c0, 0] = float(template[1])  # x coordinate
-            coords[c0, 1] = float(template[2])  # y coordinate
-            coords[c0, 2] = float(template[3])  # z coordinate
-
-            nb1, nb2, nb3 = int(template[4]), int(template[5]), int(template[6])
-            adj_tab[c0, 0] = nb1   # adjcent carbon 1
-            adj_tab[c0, 1] = nb2   # adjcent carbon 2
-            adj_tab[c0, 2] = nb3   # adjcent carbon 3
-            # note the index of adj_matrix runs from 0 to N-1
-            adj_matrix[c0-1, nb1-1] = 1
-            adj_matrix[c0-1, nb2-1] = 1
-            adj_matrix[c0-1, nb3-1] = 1
-
-        # skip the tail lines, which is
-        # 0
-        # for each isomer
-        util.skip_lines(f_w3d, parms.ISOMER_TAIL_LINE)
-
-        # dicts to store carbon type, bond types and ring type
-        # dict {car:car_type}
-        car2type = {}
-        # dict {car_type:[carbon]}
-        type2car = copy.deepcopy(type2car_default)
-        # dict {(c1,c2):bond_type}
-        bond2type = {}
-        # dict {bond_type:[(c1,c2)]}
-        type2bond = copy.deepcopy(type2bond_default)
-        # dict {(c1,c2,...,ck):size}
-        # note we required that (c1,c2,...,ck) been ordered increasingly,
-        # thus every ring has its unique representation
-        ring2type = {}
-        # dict {size:[(c1,c2,...,ck)]}
-        type2ring = copy.deepcopy(type2ring_default)
-
-        # starting analysis
-        for c0 in range(1, parms.total_carbons+1):
-            c1, c2, c3 = adj_tab[c0]
-            ring12 = get_ring(c0, c1, c2, c3)
-            ring12_type = len(ring12)
-            ring13 = get_ring(c0, c1, c3, c2)
-            ring13_type = len(ring13)
-            ring23 = get_ring(c0, c2, c3, c1)
-            ring23_type = len(ring23)
-
-            set_carbon_type(c0, [ring12_type, ring13_type, ring23_type])
-            set_bond_type(c0, c1, [ring12_type, ring13_type])
-            set_bond_type(c0, c2, [ring12_type, ring23_type])
-            set_bond_type(c0, c3, [ring13_type, ring23_type])
-            set_ring_type(ring12)
-            set_ring_type(ring13)
-            set_ring_type(ring23)
-        
-        
-        # save topological statistics
-        for t, cars in type2car.items():
-            df_Topology.loc[isomer, t] = len(cars)
-        for t, bonds in type2bond.items():
-            df_Topology.loc[isomer, t] = len(bonds)
-        for t, rings in type2ring.items():
-            df_Topology.loc[isomer, t] = len(rings)
+    # save default value of 3 dictionaries: type2car, type2bond and size2ring
+    type2car_default = {}
+    type2bond_default = {}
+    type2ring_default = {}
+    for i in range(parms.MIN_RING_SIZE, parms.MAX_RING_SIZE+1):
+        type2ring_default[i] = set()
+        for j in range(i, parms.MAX_RING_SIZE+1):
+            type2bond_default[int(''.join((list(map(str, [i, j])))))] = []
+            for k in range(j, parms.MAX_RING_SIZE+1):
+                type2car_default[int(''.join((list(map(str, [i, j, k])))))] = []
 
 
-        # save coordinates and other infomation
-        filename = 'C_%d_%d' % (parms.total_carbons, isomer)
-        with open(os.path.join(parms.CAGE_data_path, filename), 'w') as f_coord:
+    with open(parms.w3d, 'r') as f_w3d:
+        # skip the first line, which is
+        # >>writegraph3d<<
+        # in w3d file
+        util.skip_lines(f_w3d, 1)
+
+        for isomer in range(1, parms.total_isomers+1):
+            # skip the head line(s) of each isomer,
+            # if no line need to skip, just set ISOMER_HEAD_LINE = 0 
+            util.skip_lines(f_w3d, parms.ISOMER_HEAD_LINE)
+            adj_matrix[:, :] = 0 
+
             for c0 in range(1, parms.total_carbons+1):
-                f_coord.write('C\t%9.5f\t%9.5f\t%9.5f\n' % (coords[c0][0], coords[c0][1], coords[c0][2]))
-            f_coord.write('\nadjencent table:\n')
+                line = f_w3d.readline()
+                template = line.split()
+                coords[c0, 0] = float(template[1])  # x coordinate
+                coords[c0, 1] = float(template[2])  # y coordinate
+                coords[c0, 2] = float(template[3])  # z coordinate
+
+                nb1, nb2, nb3 = int(template[4]), int(template[5]), int(template[6])
+                adj_tab[c0, 0] = nb1   # adjcent carbon 1
+                adj_tab[c0, 1] = nb2   # adjcent carbon 2
+                adj_tab[c0, 2] = nb3   # adjcent carbon 3
+                # note the index of adj_matrix runs from 0 to N-1
+                adj_matrix[c0-1, nb1-1] = 1
+                adj_matrix[c0-1, nb2-1] = 1
+                adj_matrix[c0-1, nb3-1] = 1
+
+            # skip the tail lines, which is
+            # 0
+            # for each isomer
+            util.skip_lines(f_w3d, parms.ISOMER_TAIL_LINE)
+
+            # dicts to store carbon type, bond types and ring type
+            # dict {car:car_type}
+            car2type = {}
+            # dict {car_type:[carbon]}
+            type2car = copy.deepcopy(type2car_default)
+            # dict {(c1,c2):bond_type}
+            bond2type = {}
+            # dict {bond_type:[(c1,c2)]}
+            type2bond = copy.deepcopy(type2bond_default)
+            # dict {(c1,c2,...,ck):size}
+            # note we required that (c1,c2,...,ck) been ordered increasingly,
+            # thus every ring has its unique representation
+            ring2type = {}
+            # dict {size:[(c1,c2,...,ck)]}
+            type2ring = copy.deepcopy(type2ring_default)
+
+            # starting analysis
             for c0 in range(1, parms.total_carbons+1):
-                f_coord.write('%d:%d,%d,%d\n' % (c0, adj_tab[c0][0], adj_tab[c0][1], adj_tab[c0][2]))
-            f_coord.write('\ncar2type:\n')
-            f_coord.write(str(car2type) + '\n')
-            f_coord.write('\ntype2car:\n')
-            f_coord.write(str(type2car) + '\n')
-            f_coord.write('\nbond2type:\n')
-            f_coord.write(str(bond2type) + '\n')
-            f_coord.write('\ntype2bond:\n')
-            f_coord.write(str(type2bond) + '\n')
-            f_coord.write('\nring2type:\n')
-            f_coord.write(str(ring2type) + '\n')
-            f_coord.write('\ntype2ring:\n')
-            f_coord.write(str(type2ring) + '\n')
-    
-        # Huckel
-        evs = np.linalg.eigvalsh(-adj_matrix)
-        evs.sort()
-        for i in range(len(evs)):
-            orb = 'orb' + str(i+1)
-            df_Huckel.loc[isomer, orb] = evs[i]
+                c1, c2, c3 = adj_tab[c0]
+                ring12 = get_ring(c0, c1, c2, c3)
+                ring12_type = len(ring12)
+                ring13 = get_ring(c0, c1, c3, c2)
+                ring13_type = len(ring13)
+                ring23 = get_ring(c0, c2, c3, c1)
+                ring23_type = len(ring23)
 
-        # Kekule
-        k = count_kekule(all_carbons)
-        df_Kekule.loc[isomer, 'K'] = k
-        df_Kekule.loc[isomer, 'ln_K'] = np.log(k)
+                set_carbon_type(c0, [ring12_type, ring13_type, ring23_type])
+                set_bond_type(c0, c1, [ring12_type, ring13_type])
+                set_bond_type(c0, c2, [ring12_type, ring23_type])
+                set_bond_type(c0, c3, [ring13_type, ring23_type])
+                set_ring_type(ring12)
+                set_ring_type(ring13)
+                set_ring_type(ring23)
+            
+            
+            # save topological statistics
+            for t, cars in type2car.items():
+                df_Topology.loc[isomer, t] = len(cars)
+            for t, bonds in type2bond.items():
+                df_Topology.loc[isomer, t] = len(bonds)
+            for t, rings in type2ring.items():
+                df_Topology.loc[isomer, t] = len(rings)
 
-df_Topology.to_csv(parms.topology)
-df_Huckel.to_csv(parms.huckel)
-df_Kekule.to_csv(parms.kekule)
+
+            # save coordinates and other infomation
+            filename = 'C_%d_%d' % (parms.total_carbons, isomer)
+            with open(os.path.join(parms.CAGE_data_path, filename), 'w') as f_coord:
+                for c0 in range(1, parms.total_carbons+1):
+                    f_coord.write('C\t%9.5f\t%9.5f\t%9.5f\n' % (coords[c0][0], coords[c0][1], coords[c0][2]))
+                f_coord.write('\nadjencent table:\n')
+                for c0 in range(1, parms.total_carbons+1):
+                    f_coord.write('%d:%d,%d,%d\n' % (c0, adj_tab[c0][0], adj_tab[c0][1], adj_tab[c0][2]))
+                f_coord.write('\ncar2type:\n')
+                f_coord.write(str(car2type) + '\n')
+                f_coord.write('\ntype2car:\n')
+                f_coord.write(str(type2car) + '\n')
+                f_coord.write('\nbond2type:\n')
+                f_coord.write(str(bond2type) + '\n')
+                f_coord.write('\ntype2bond:\n')
+                f_coord.write(str(type2bond) + '\n')
+                f_coord.write('\nring2type:\n')
+                f_coord.write(str(ring2type) + '\n')
+                f_coord.write('\ntype2ring:\n')
+                f_coord.write(str(type2ring) + '\n')
+        
+            # Huckel
+            evs = np.linalg.eigvalsh(-adj_matrix)
+            evs.sort()
+            for i in range(len(evs)):
+                orb = 'orb' + str(i+1)
+                df_Huckel.loc[isomer, orb] = evs[i]
+
+            # Kekule
+            k = count_kekule(all_carbons)
+            df_Kekule.loc[isomer, 'K'] = k
+            df_Kekule.loc[isomer, 'ln_K'] = np.log(k)
+
+    df_Topology.to_csv(parms.topology)
+    df_Huckel.to_csv(parms.huckel)
+    df_Kekule.to_csv(parms.kekule)

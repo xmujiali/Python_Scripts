@@ -41,6 +41,7 @@ directories = eval(parms.get('path_and_name', 'directories'))
 gjf_template_path = eval(parms.get('path_and_name', 'gjf_template_path'))
 opt_error_log = eval(parms.get('path_and_name', 'opt_error_log'))
 adj_error_log = eval(parms.get('path_and_name', 'adj_error_log'))
+nlo_error_log = eval(parms.get('path_and_name', 'nlo_error_log'))
 result = eval(parms.get('path_and_name', 'result'))
 logging_file = eval(parms.get('path_and_name', 'logging_file'))
 
@@ -77,7 +78,7 @@ report_frequency = parms.getint('other', 'report_frequency')
 logging.basicConfig(filename=main_path+os.sep+logging_file,
                     filemode='a',
                     format='%(asctime)s - %(filename)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 # debug = logging.debug
 # info = logging.info
 # warning = logging.warning
